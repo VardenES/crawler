@@ -15,70 +15,46 @@
 	$info_distrimagen = array();
 	$links_distrimagen = array();
 
-	$site = "xxxxxx";
+	//$site = "http://www.distrimagen.es/catalogo/book.asp?id=5371&coleccion=VAMPIRO%3AREQUIEM";
 
-	
+$site = "http://www.xxxxxx/catalogo/lista.asp?pagina=";	
+$dominio = "http://www.xxxxxx.es";
+
 
 $contador = 1;
-/*
-do{
-	$site.=$contador;
-	$contador++;
-
-	$exist = is_404($site);
-
-	if($exist){
-		echo "Contaremos la página y sacaremos los enlaces";
-		$url = get_links_tesoros($site);
-		var_dump($url);
-		/*
-		// Información de los juegos
-		foreach($url as $key => $value) {
-			get_info_tesoros($value);
-			
-			control_link($value);
-			echo "<p>";
-			echo $info_tesoros[0]["name"][0]."<br>";
-			echo $info_tesoros[0]["description"][0]."</p>";
-		}
-		*/
-/*	}
-	else
-	{
-		echo "La web es 404";
-	}
 
 
-
-
-} while($contador > 3); //while(!$exist[0] == 'HTTP/1.1 404 Not Found');
-	
-	//$exist = control_link($site);
-
-*/
-
-/*while($contador <=3){	
-	$web = $site.$contador;
+while($contador <=1){	
+	$web = $site.$contador."&coleccion=VAMPIRO&categoria=";
 	$contador++;
 
 	$exist = is_404($web);
 
 	if($exist){		
 		echo $web."<br>";
-		$url = get_links_tesoros($web);
-		var_dump($url);
-		/*
+		$url = get_links_distrimagen($web);
+		//var_dump($url);
+		
 		// Información de los juegos
 		foreach($url as $key => $value) {
-			get_info_tesoros($value);
+			get_info_distrimagen($dominio."/catalogo/".$value);
 			
-			control_link($value);
 			echo "<p>";
-			echo $info_tesoros[0]["name"][0]."<br>";
-			echo $info_tesoros[0]["description"][0]."</p>";
+			echo $info_distrimagen[0]["name"]."<br>";
+			echo $info_distrimagen[0]["description"]."<br>";
+			echo $info_distrimagen[0]["price"]."<br>";
+
+			if (!empty($info_distrimagen[0]["image"])) {
+			    echo "<img src=\"".$info_distrimagen[0]["image"]." \"></p>";
+			} else {			    
+			}	
+
+
+
+						
 		}
-		*/
-/*	}
+		
+	}
 	else
 	{
 		echo "La web es 404";
@@ -87,29 +63,21 @@ do{
 
 
 
-}; //while(!$exist[0] == 'HTTP/1.1 404 Not Found');
-	
-	//$exist = control_link($site);
+}; 
 
-*/
-
-
-
-	get_info_distrimagen($site);
-	var_dump($info_distrimagen);
-	echo "<p>";
-	echo $info_distrimagen[0]["name"]."<br>";
-	echo $info_distrimagen[0]["description"]."</p>";
-	echo $info_distrimagen[0]["price"]."</p>";
-	echo "<img src=\"http://www.xxxxxx".$info_distrimagen[0]["image"]." \"></p>";
 
 	function get_info_distrimagen($url){
 		global $info_distrimagen;
+		global $dominio;
 
 		$name_selector = "td>p>font";
 		$price_selector = "td.txtpeq>font";
 		$description_selector = "td>p>font"; //td.txt
-		$image_selector = "a>img";
+		$image_selector = "td.txtpeq>img";
+
+		$product_name = "";
+		$product_description = "";
+		$product_image = "";
 
 		$client = new Client();
 		$crawler = $client->request('GET', $url);
@@ -117,9 +85,31 @@ do{
 		//var_dump($crawler->filter($name_selector)->extract('_text'));
 
 		$info_producto = array($crawler->filter($name_selector)->extract('_text'));
+		if (!empty($info_producto[0][0])) {
+		    $product_name = $info_producto[0][0];
+		} else {
+		    $product_name = "";
+		}
+
+		if (!empty($info_producto[0][2])) {
+		    $product_description = $info_producto[0][2];
+		} else {
+		    $product_description = "";
+		}
+
+
+
 
 		$image_producto = array($crawler->filter($image_selector)->extract('src'));
-		var_dump($image_producto);
+		//var_dump($image_producto);
+
+		if (!empty($image_producto[0][0])) {
+		    $product_image = $dominio.$image_producto[0][0];
+		} else {
+		    $product_image = "";
+		}	
+
+		//var_dump($image_producto);
 
 		// Patrón para arreglar la salida del precio
 			$pattern = '/[0-9]*[,]*[0-9]{0,2}( €)/';
@@ -129,6 +119,11 @@ do{
 			$price = "";
 
 			//var_dump($subject);
+
+
+// Pendiente de desglose de la siguiente info:
+// Precio (Sin IVA): 28,75 € IVA (4%): 1,15 € PVP: 29,90 € Páginas: 128Número: 1061
+			
 
 
 
@@ -146,11 +141,11 @@ do{
 		// Cargamos la información que se devuelve
 		$info_distrimagen = array(
 			array(
-				"name" => $info_producto[0][0],
+				"name" => $product_name,
 				"url" => $url,	
-				"description" => $info_producto[0][2],
+				"description" => $product_description,
 				"price" => $subject[0],
-				"image" => $image_producto[0][1]
+				"image" => $product_image
 				//"price" => $price
 			)
 		
@@ -162,11 +157,9 @@ do{
 
 
 
-$web = "xxxxxx";
 
-get_links_distrimagen($web);
 
-$links_distrimagen;
+
 
 
 	function get_links_distrimagen($url){
@@ -182,8 +175,8 @@ $links_distrimagen;
 
 		$links_distrimagen = $crawler->filter($link_selector)->extract($get);
 		
-		var_dump($links_distrimagen);
-		//return $links_tesoros;
+		//var_dump($links_distrimagen);
+		return $links_distrimagen;
 	}
 
 
@@ -206,6 +199,48 @@ $links_distrimagen;
 		}
 	}
 
+	function get_info_tesoros($url){
+		global $info_tesoros;
+
+		$name_selector = "h1.product_title";
+		$price_selector = "ins>span.woocommerce-Price-amount";
+		$description_selector = "div.woocommerce-Tabs-panel--description";
+
+		$client = new Client();
+		$crawler = $client->request('GET', $url);
+
+		// Patrón para arreglar la salida de la descripción
+			$pattern = '/\s*(Descripción)/';
+			$replacement = '';
+			$subject = $crawler->filter($description_selector)->extract('_text');
+
+		// Cargamos la información que se devuelve
+		$info_tesoros = array(
+			array(
+				"name" => $crawler->filter($name_selector)->extract('_text'),
+				"url" => $url,	
+				"description" => preg_replace($pattern, $replacement, $subject)
+			)
+		);
+
+		return $info_tesoros;
+	}
+
+	function get_links_tesoros($url){
+		global $links_tesoros;
+
+		$link_selector = "a.woocommerce-loop-product__link";
+		$get = "href";
+
+		$client = new Client();
+		$crawler = $client->request('GET', $url);
+
+		$css_selector_title = "h3.kw-details-title";
+
+		$links_tesoros = $crawler->filter($link_selector)->extract($get);
+		
+		return $links_tesoros;
+	}
 
 
 
