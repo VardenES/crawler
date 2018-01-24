@@ -65,6 +65,32 @@ while($contador <=1){
 
 }; 
 
+// Nota: En desarrollo
+function get_detail_info_distrimagen($text){
+	
+	//$pattern = "/^\s*PVP:/m";
+	$price_pattern = "/PVP: [0-9]*[,]*[0-9]{0,2}/m";
+	$number_pattern = "/Número: [0-9]{0,4}/m";
+	$pages_pattern = "/[0-9]{0,3}Número: /m";
+	//preg_match_all($pattern, $string, $matches1);
+
+
+	$precio = preg_match_all($price_pattern, $string, $matches2);
+	preg_match($number_pattern, $string, $matches3);
+	preg_match($pages_pattern, $string, $matches4);
+
+	var_dump($matches2);
+	var_dump($matches3);
+	var_dump($matches4);
+
+	var_dump($precio);
+	$product_price = substr($precio[0], 0);
+
+	var_dump($product_price);
+	echo "El precio es: ".$precio;
+}
+
+
 
 	function get_info_distrimagen($url){
 		global $info_distrimagen;
