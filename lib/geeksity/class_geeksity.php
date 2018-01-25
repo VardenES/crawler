@@ -2,8 +2,6 @@
 
 include('../vendor/autoload.php');
 use Goutte\Client;
-require('selectors.php');
-
 
 class geeksity
 {
@@ -90,6 +88,13 @@ class geeksity
 		$crawler = $this->client->request('GET', $this->catalog_url);
 
 		$links = $crawler->filter($this->link_selector)->extract($get);
+
+		if($this->web_name == "Distrimagen"){
+			foreach ($links as &$value){
+				$value = $this->dominio.'/catalogo/'.$value;
+			}
+			unset($value);
+		}
 
 		var_dump($links);
 		return $links;
