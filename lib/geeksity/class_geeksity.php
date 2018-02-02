@@ -79,8 +79,28 @@ class geeksity
 		}
 	} // End function is_404
 
-	public function get_links(){
+	public function get_links($url){
 		global $links, $catalog_url, $link_selector;
+
+		$get = "href";
+
+		$this->client = new Client();
+		$crawler = $this->client->request('GET', $url);
+
+		$links = $crawler->filter($this->link_selector)->extract($get);
+
+		if($this->web_name == "Distrimagen"){
+			foreach ($links as &$value){
+				$value = $this->dominio.'/catalogo/'.$value;
+			}
+			unset($value);
+		}
+
+		//var_dump($links);
+		return $links;
+
+
+		/*global $links, $catalog_url, $link_selector;
 
 		$get = "href";
 
@@ -97,14 +117,15 @@ class geeksity
 		}
 
 		var_dump($links);
-		return $links;
+		return $links;*/
+
 	} // End function get_links
 
-	public function get_product_info(){
+	public function get_product_info($url){
 		global $product_info, $web_name, $product_url, $name_selector, $price_selector, $description_selector, $image_selector;
 
 		$this->client = new Client();
-		$crawler = $this->client->request('GET', $this->product_url);
+		$crawler = $this->client->request('GET', $url);
 
 		// OPTION 1: "TESOROS DE LA MARCA"
 		if($this->web_name == "Tesoros de la Marca"){
@@ -125,9 +146,9 @@ class geeksity
 			// Information reply
 			$product_info = array(
 					"name" => $crawler->filter($this->name_selector)->extract('_text')[0],
-					"url" => $this->product_url,	
+					"url" => $url,	
 					"description" => preg_replace($pattern, $replacement, $subject)[0],
-					"image" => $product_image	
+					"image" => $product_image
 			);						
 		}
 
@@ -165,7 +186,7 @@ class geeksity
 			// Information reply
 			$product_info = array(
 					"name" => $product_name,
-					"url" => $this->product_url,	
+					"url" => $url,	
 					"description" => $product_description,
 					"price" => $subject[0],
 					"image" => $product_image	
@@ -187,12 +208,75 @@ class geeksity
 			    $product_image = "";
 			}	
 
+			// Get specs of the product
+			$category_selector = "div.attribute-label";
+			$category_value = "div.attribute-value"; //'/id#product-specs/';
+			$product_value3 = array(
+				"label" => $crawler->filter($category_selector)->extract('_text'),
+				"value" => $crawler->filter($category_value)->extract('_text')
+			);
+			var_dump($product_value3);
+			
+			$category = array ($product_value3['label'][1] => $product_value3['value'][1]);
+			$product_specs = array();
+
+				$product_specs["categoria"] = "";
+				$product_specs["BGG"] = "";
+				$product_specs["estilo"] = "";
+				$product_specs["edad"] = "";
+				$product_specs["jugadores"] = "";
+				$product_specs["tiempo"] = "";	
+				$product_specs["idioma"] = "";
+				$product_specs["fabricante"] = "";
+
+			foreach($product_value3['label'] as $clave=>$valor){
+				echo "El valor de ".$clave." es ".$valor." ".$product_value3['value'][$clave]."</br>";
+				if(strpos($valor, 'Categoría') !==false){
+					$product_specs["categoria"] = trim ( $product_value3['value'][$clave], " \t\n\r\0\x0B" );
+				}
+				if(strpos($valor, 'BGG') !==false){
+					$product_specs["BGG"] = "https://boardgamegeek.com/boardgame/".(trim ( $product_value3['value'][$clave], " \t\n\r\0\x0B" ));
+				}
+				if(strpos($valor, 'estilo') !==false){
+					$product_specs["estilo"] = trim ( $product_value3['value'][$clave], " \t\n\r\0\x0B" );
+				}
+				if(strpos($valor, 'Edad') !==false){
+					$product_specs["edad"] = trim ( $product_value3['value'][$clave], " \t\n\r\0\x0B" );
+				}
+
+				if(strpos($valor, 'jugadores') !==false){
+					$product_specs["jugadores"] = trim ( $product_value3['value'][$clave], " \t\n\r\0\x0B" );
+				}	
+				if(strpos($valor, 'Tiempo') !==false){
+					$product_specs["tiempo"] = trim ( $product_value3['value'][$clave], " \t\n\r\0\x0B" );
+				}				
+				if(strpos($valor, 'idioma') !==false){
+					$product_specs["idioma"] = trim ( $product_value3['value'][$clave], " \t\n\r\0\x0B" );
+				}	
+				if(strpos($valor, 'Fab') !==false){
+					$product_specs["fabricante"] = trim ( $product_value3['value'][$clave], " \t\n\r\0\x0B" );
+				}	
+
+			}
+			var_dump($product_specs);
+
+			
+			//var_dump($category);
+
 			// Information reply
 			$product_info = array(
 					"name" => $crawler->filter($this->name_selector)->extract('_text')[0],
-					"url" => $this->product_url,	
+					"url" => $url,	
 					"description" => preg_replace($pattern, $replacement, $subject)[0],
-					"image" => $product_image	
+					"image" => $product_image,
+					"categoria" => $product_specs["categoria"],
+					"BGG" => $product_specs["BGG"],
+					"estilo" => $product_specs["estilo"],
+					"edad" => $product_specs["edad"],
+					"jugadores" => $product_specs["jugadores"],
+					"tiempo" => $product_specs["tiempo"],
+					"idioma" => $product_specs["idioma"],
+					"fabricante" => $product_specs["fabricante"]		
 			);						
 		}
 		// OPTION 4: "JUEGOS DE LA MESA REDONDA"
@@ -214,7 +298,7 @@ class geeksity
 			// Information reply
 			$product_info = array(
 					"name" => $crawler->filter($this->name_selector)->extract('_text')[0],
-					"url" => $this->product_url,	
+					"url" => $url,	
 					"description" => preg_replace($pattern, $replacement, $subject)[0],
 					"image" => $product_image	
 			);						
